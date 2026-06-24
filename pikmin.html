@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>皮克敏明信片紀錄牆</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --primary-color: #4CAF50;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 0.9em;
+        }
+        /* 工具列樣式 */
+        .share-tools {
+            background: #e8f5e9;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .share-tools span {
+            font-weight: bold;
+            color: #2e7d32;
+        }
+        /* 表單與編輯區樣式 */
+        .form-box, .edit-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            height: 38px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .btn-secondary { background-color: #757575; }
+        .btn-secondary:hover { background-color: #616161; }
+        
+        .btn-share { background-color: #ff9800; }
+        .btn-share:hover { background-color: #f57c00; }
+        
+        .btn-import { background-color: #009688; }
+        .btn-import:hover { background-color: #00796b; }
+
+        .btn-edit {
+            background-color: #0288d1;
+            width: 100%;
+            margin-top: 10px;
+            height: 32px;
+            font-size: 0.9em;
+            padding: 0;
+        }
+        .btn-edit:hover { background-color: #01579b; }
+        
+        /* 明信片牆卡片樣式 */
+        .postcard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+            position: relative;
+        }
+        .card:hover { transform: translateY(-5px); }
+        .card-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background-color: #e0e0e0;
+        }
+        .card-content { padding: 15px; }
+        .card-title {
+            font-size: 1.2em;
+            margin: 0 0 10px 0;
+            font-weight: bold;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+        }
+        .badge-status-1 { background-color: #2e7d32; } 
+        .badge-status-2 { background-color: #fbc02d; color: #333; } 
+        .badge-status-3 { background-color: #d32f2f; } 
+        
+        .card-geo {
+            font-size: 0.9em;
+            color: #1976d2;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: bold;
+        }
+        .card-geo:hover { text-decoration: underline; }
+        
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.8);
+            color: #ff3333;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            z-index: 10;
+        }
+        /* 隱藏原生檔案上傳鈕 */
+        #importFile { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🌱 皮克敏明信片紀錄牆</h1>
+    <div class="subtitle">追蹤你的皮克敏足跡與好友明信片分享</div>
+    
+    <div class="share-tools">
+        <span>互動分享工具：</span>
+        <button class="btn-share" onclick="exportData()">📤 匯出資料備份 (傳給朋友)</button>
+        <button class="btn-import" onclick="document.getElementById('importFile').click()">📥 匯入好友檔案</button>
+        <input type="file" id="importFile" accept=".json" onchange="importData(this)">
+    </div>
+    
+    <div class="form-box">
+        <div class="form-group">
+            <label for="name">明信片名稱</label>
+            <input type="text" id="name" placeholder="例如：台北101">
+        </div>
+        <div class="form-group">
+            <label for="imgFile">上傳明信片圖片</label>
+            <input type="file" id="imgFile" accept="image/*">
+        </div>
+        <div class="form-group">
+            <label for="coords">座標點 (經緯度)</label>
+            <input type="text" id="coords" placeholder="例如：25.0339,121.5645">
+        </div>
+        <div class="form-group">
+            <label for="status">狀態標籤</label>
+            <select id="status">
+                <option value="已收集">🟢 已收集（持有中）</option>
+                <option value="曾擁有">🟡 曾擁有（已送人/刪除）</option>
+                <option value="未收集">🔴 未收集（想要目標）</option>
+            </select>
+        </div>
+        <button onclick="addPostcard()">新增紀錄</button>
+    </div>
+
+    <div class="postcard-grid" id="postcardGrid"></div>
+</div>
+
+<script>
+    // 預設範例資料
+    const defaultData = [
+        { id: 1, name: "台北101", img: "https://images.unsplash.com/photo-1552914381-1961445778bc?w=500", coords: "25.0339,121.5645", status: "已收集" }
+    ];
+
+    let postcards = JSON.parse(localStorage.getItem('pikmin_postcards')) || defaultData;
+    let editingId = null; 
+
+    function renderCards() {
+        const grid = document.getElementById('postcardGrid');
+        grid.innerHTML = '';
+
+        postcards.forEach(card => {
+            if (card.id === editingId) {
+                const editHtml = `
+                    <div class="card" style="padding: 15px; box-sizing: border-box;">
+                        <div style="margin-bottom: 8px;">
+                            <label style="font-size:0.8em; font-weight:bold;">名稱：</label>
+                            <input type="text" id="edit_name_${card.id}" value="${card.name}" style="width:100%; padding:4px;">
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <label style="font-size:0.8em; font-weight:bold;">換新圖片：</label>
+                            <input type="file" id="edit_file_${card.id}" accept="image/*" style="width:100%; font-size:0.8em;">
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <label style="font-size:0.8em; font-weight:bold;">座標：</label>
+                            <input type="text" id="edit_coords_${card.id}" value="${card.coords || ''}" style="width:100%; padding:4px;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size:0.8em; font-weight:bold;">狀態：</label>
+                            <select id="edit_status_${card.id}" style="width:100%; padding:4px;">
+                                <option value="已收集" ${card.status === '已收集' ? 'selected' : ''}>🟢 已收集</option>
+                                <option value="曾擁有" ${card.status === '曾擁有' ? 'selected' : ''}>🟡 曾擁有</option>
+                                <option value="未收集" ${card.status === '未收集' ? 'selected' : ''}>🔴 未收集</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; gap:5px;">
+                            <button onclick="saveEdit(${card.id})" style="flex:1; height:30px; padding:0; font-size:0.9em;">儲存</button>
+                            <button onclick="cancelEdit()" class="btn-secondary" style="flex:1; height:30px; padding:0; font-size:0.9em;">取消</button>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += editHtml;
+                return;
+            }
+
+            let statusClass = 'badge-status-1';
+            if (card.status === '曾擁有') statusClass = 'badge-status-2';
+            if (card.status === '未收集') statusClass = 'badge-status-3';
+            
+            const googleMapUrl = 'https://www.google.com/maps/search/?api=1&query=' + card.coords;
+            const displayImg = card.img ? card.img : 'https://via.placeholder.com/300x200?text=No+Image';
+            
+            const cardHtml = `
+                <div class="card">
+                    <button class="delete-btn" onclick="deleteCard(${card.id})">×</button>
+                    <img class="card-img" src="${displayImg}" alt="${card.name}">
+                    <div class="card-content">
+                        <span class="badge ${statusClass}">${card.status}</span>
+                        <h3 class="card-title">${card.name}</h3>
+                        ${card.coords ? `<a href="${googleMapUrl}" target="_blank" class="card-geo">📍 點我開啟地圖導航</a>` : '<span style="color:#aaa; font-size:0.9em;">📍 無座標資料</span>'}
+                        <button class="btn-edit" onclick="startEdit(${card.id})">✏️ 編輯卡片</button>
+                    </div>
+                </div>
+            `;
+            grid.innerHTML += cardHtml;
+        });
+
+        saveToLocalStorage();
+    }
+
+    function saveToLocalStorage() {
+        try {
+            localStorage.setItem('pikmin_postcards', JSON.stringify(postcards));
+        } catch (e) {
+            alert('儲存失敗！新上傳的照片檔案可能太大（超過瀏覽器限制）。建議先將圖片截圖縮小後再試。');
+        }
+    }
+
+    function addPostcard() {
+        const name = document.getElementById('name').value;
+        const fileInput = document.getElementById('imgFile');
+        const coords = document.getElementById('coords').value;
+        const status = document.getElementById('status').value;
+
+        if (!name) {
+            alert('請務必輸入明信片名稱！');
+            return;
+        }
+
+        const file = fileInput.files[0];
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                const newCard = {
+                    id: Date.now(),
+                    name: name,
+                    img: reader.result,
+                    coords: coords,
+                    status: status
+                };
+                postcards.unshift(newCard);
+                renderCards();
+                clearInputs();
+            }
+            reader.readAsDataURL(file);
+        } else {
+            const newCard = {
+                id: Date.now(),
+                name: name,
+                img: '',
+                coords: coords,
+                status: status
+            };
+            postcards.unshift(newCard);
+            renderCards();
+            clearInputs();
+        }
+    }
+
+    function clearInputs() {
+        document.getElementById('name').value = '';
+        document.getElementById('imgFile').value = '';
+        document.getElementById('coords').value = '';
+    }
+
+    function startEdit(id) {
+        editingId = id;
+        renderCards();
+    }
+
+    function cancelEdit() {
+        editingId = null;
+        renderCards();
+    }
+
+    function saveEdit(id) {
+        const updatedName = document.getElementById(`edit_name_${id}`).value;
+        const updatedCoords = document.getElementById(`edit_coords_${id}`).value;
+        const updatedStatus = document.getElementById(`edit_status_${id}`).value;
+        const fileInput = document.getElementById(`edit_file_${id}`);
+        
+        if (!updatedName) {
+            alert('名稱不能為空！');
+            return;
+        }
+
+        const cardIndex = postcards.findIndex(card => card.id === id);
+        if (cardIndex === -1) return;
+
+        const file = fileInput.files[0];
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                postcards[cardIndex].name = updatedName;
+                postcards[cardIndex].coords = updatedCoords;
+                postcards[cardIndex].status = updatedStatus;
+                postcards[cardIndex].img = reader.result;
+                
+                editingId = null;
+                renderCards();
+            }
+            reader.readAsDataURL(file);
+        } else {
+            postcards[cardIndex].name = updatedName;
+            postcards[cardIndex].coords = updatedCoords;
+            postcards[cardIndex].status = updatedStatus;
+            
+            editingId = null;
+            renderCards();
+        }
+    }
+
+    function deleteCard(id) {
+        if(confirm('確定要刪除這張明信片紀錄嗎？')) {
+            postcards = postcards.filter(card => card.id !== id);
+            renderCards();
+        }
+    }
+
+    /* ─── 🌟 新增：匯出資料功能 ─── */
+    function exportData() {
+        if (postcards.length === 0) {
+            alert('目前沒有任何明信片紀錄可以匯出喔！');
+            return;
+        }
+        const dataStr = JSON.stringify(postcards);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = 'pikmin_backup.json';
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    }
+
+    /* ─── 🌟 新增：匯入資料功能 ─── */
+    function importData(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        if (confirm('匯入新檔案將會【覆蓋】您目前網頁上的所有紀錄，確定要繼續嗎？（建議匯入前先將自己的資料匯出備份）')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedPostcards = JSON.parse(e.target.result);
+                    if (Array.isArray(importedPostcards)) {
+                        postcards = importedPostcards;
+                        renderCards();
+                        alert('🎉 資料匯入成功！已更新明信片牆。');
+                    } else {
+                        alert('檔案格式不正確，匯入失敗。');
+                    }
+                } catch (err) {
+                    alert('讀取檔案時發生錯誤，請確保是正確的皮克敏備份檔。');
+                }
+            };
+            reader.readAsText(file);
+        }
+        input.value = ''; // 清空 file input 讓同一個檔案可以重複觸發變更
+    }
+
+    // 初始化網頁
+    renderCards();
+</script>
+
+</body>
+</html>
