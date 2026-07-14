@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+   <script>
+  (function() {
+    // 設定你專用的密碼（實務上這非絕對安全，但能防住 99% 的一般路人與爬蟲）
+    const SecretPassword = "你自訂的密碼123"; 
+    
+    // 從瀏覽器暫存檢查是否已經驗證過
+    if (sessionStorage.getItem('page_authenticated') !== 'true') {
+        let password = prompt("此為私人網頁，請輸入存取密碼：");
+        
+        if (password === SecretPassword) {
+            sessionStorage.setItem('page_authenticated', 'true');
+        } else {
+            alert("密碼錯誤，拒絕存取！");
+            window.location.href = "about:blank"; // 導向空白頁
+        }
+    }
+  })();
+</script>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
